@@ -11,25 +11,37 @@ fn int main(String[] args)
 
 	Value v;
 	v.data = 100.;
-	v.label = "a";
+	v.label = "v";
 
 	Value w;
 	w.data = 10.;
-	w.label = "b";
+	w.label = "w";
 
 	Value z = v.add(&w);
+	z.label = "z";
+
+	z.grad = 2.0;
 
 	z.display();
+
 	
 	double n = 2.;
 
 	Value zpow = z.pow(n);
 	zpow.label = "zpow";
 
-	zpow.display();
-
+	//zpow.display();
 
 	v.display();
+
+	w.display();
+
+	z.addgrad(&v,&w);
+
+	v.display();
+
+	w.display();
+
 
 	// cast not working
 	// free lists? (replace by arrays?
@@ -41,8 +53,7 @@ fn int main(String[] args)
 	// io::printn("bla");  
 	// (void)io::printf("bla:%s", &d);   // Works!
 
+	//v.printExpr(&Value.addTen);
+
 	return 0;
-}	
-
-
-
+}

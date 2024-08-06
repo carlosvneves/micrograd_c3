@@ -6,6 +6,8 @@ import std::collections::list;
 import std::math;
 import std::core::builtin;
 
+
+
 // def DoubleBackward= fn double(double);
 
 // fn void apply(double[] arr, DoubleBackward t)
@@ -57,7 +59,8 @@ fn void main()
 	
 	List
 */
-def ValueCallback = fn Value(Value v);
+//def ValueCallback = fn Value(Value* v);
+//def ValueCallback = fn void (Value* v, Value* z, Value* w);
 
 struct Value{
 	double data;
@@ -65,33 +68,66 @@ struct Value{
 	String label;
 	String op;
 	List(<Value>) prev;
+	//ValueCallback backward;
 	//double[] backward; 
 
 }
 
+// fn Value Value.addTen(Value* v){
+// 	return Value{.data=v.data + 1000};
+// }
 
-fn void apply(Value *v, ValueCallback t){
+def Vcall = fn void (Value*v, Value* w); 
 
 
+fn void Value.backward(Value* v, Value* w, Vcall vf)
+{
+	vf(v,w);
 
 }
 
-fn Value Value.add(Value *v, Value *w){
-	
-	Value z; 
-	z.data = v.data + w.data;
-	z.op = "+";
-	z.prev.push(*v);
-	z.prev.push(*w);
-
-	//backward
+fn void Value.gradAdd(Value* z, Value* v, Value* w){
 	v.grad += z.grad;
 	w.grad += z.grad;
-
-	return z;
 }
 
-fn Value Value.sub(Value *v, Value *w){
+fn void Value.gradMul(Value* z, Value* v, Value* w){
+	v.grad *= z.grad;
+	w.grad *= z.grad;
+}
+
+fn void Value.gradPow(Value* z, double d){
+	// self.grad += (other * self.data**(other-1)) * out.grad
+	v.grad += d * math::pow(v.grad, d-1)  * z.grad;
+	w.grad = w.grad + z.grad;
+}
+
+// fn void Value.printExpr(Value* v, ValueCallback valuecallback)
+// {
+// 	Value r = valuecallback(v);
+// 	double d = r.data;
+// 	io::printfn("%d", d);
+// }
+
+fn Value Value.add(Value* v, Value* w)
+{
+	
+	Value out; 
+	out.data = v.data + w.data;
+	out.op = "+";
+	out.prev.push(*v);
+	out.prev.push(*w);
+
+	//out.backward = &Value.backwardAdd();
+	
+	//backward
+	//v.grad += z.grad;
+	//w.grad += z.grad;
+
+	return out;
+}
+
+fn Value Value.sub(Value* v, Value* w){
 	
 	Value z; 
 	z.data = v.data - w.data;
@@ -106,7 +142,7 @@ fn Value Value.sub(Value *v, Value *w){
 	return z;
 }
 
-fn Value Value.mul(Value *v, Value *w){
+fn Value Value.mul(Value* v, Value* w){
 	
 	Value z; 
 	z.data = v.data * w.data;
@@ -121,7 +157,7 @@ fn Value Value.mul(Value *v, Value *w){
 	return z;
 }
 
-fn Value Value.div(Value *v, Value *w){
+fn Value Value.div(Value* v, Value* w){
 	
 	Value z; 
 	z.data = v.data * math::pow(v.data,-1);
@@ -136,18 +172,18 @@ fn Value Value.div(Value *v, Value *w){
 	return z;
 }
 
-fn Value Value.pow(Value *v, double n){
+fn Value Value.pow(Value* v, double n){
 	
-	Value z; 
+	Value out; 
 
-	z.data = math::pow(v.data, n);
+	out.data = math::pow(v.data, n);
 	// string format + type coertion
-	z.op = "pow(".concat(string::tformat("%d)",n));
+	out.op = "pow(".concat(string::tformat("%d)",n));
 
 	return z;
 }
 
-fn void Value.print_prev(Value *v){
+fn void Value.print_prev(Value* v){
 	if (!v.prev.is_empty()){
 
 		io::print("The previous nodes are: ");
@@ -162,7 +198,7 @@ fn void Value.print_prev(Value *v){
 	}
 }
 
-fn void Value.relu(Value *v){
+fn void Value.relu(Value* v){
 
 	Value z;
 
@@ -171,8 +207,7 @@ fn void Value.relu(Value *v){
 				return 0;
 			} else{
 				return v.data;	
-			}
-		|};
+			}|};
 	
 	z.op = "ReLU";
 
@@ -183,7 +218,7 @@ fn void Value.neg(Value* v){
 }
 
 
-fn void Value.bakward(Value *v){
+fn void Value.bakward(Value* v){
 	List(<Value>) topo;
 	List(<Value>) visited;
 
@@ -196,18 +231,18 @@ fn void Value.bakward(Value *v){
 
 }
 
-fn void Value.build_topo(Value *v){
+fn void Value.build_topo(Value* v){
 	List(<Value>) topo;
 	List(<Value>) visited;
 
-	if (visited.contains(*v)==false){
-		visited.push(*v);
-		foreach (&i : v.prev) 
-		{
-			build_topo(i);
-		}
-		topo.push(*v);
-	}
+	// if (visited.contains(*v)==false){
+	// 	visited.push(*v);
+	// 	foreach (&i : v.prev) 
+	// 	{
+	// 		build_topo(i);
+	// 	}
+	// 	topo.push(*v);
+	// }
 
 }
 
