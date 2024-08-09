@@ -7,44 +7,55 @@ import nn;
 
 fn int main(String[] args)
 {
+
 	io::printn("Hello, World!");
 
-	Value v;
-	v.data = 100.;
-	v.label = "v";
+	Value x;
+	x.data = 1.;
+	x.label = "x";
 
-	Value w;
-	w.data = 10.;
-	w.label = "w";
+	Value y;
+	y.data = 2.;
+	y.label = "y";
 
-	Value z = v.add(&w);
+	Value z = x.add(&y);
 	z.label = "z";
 
-	z.grad = 2.0;
+	x.display();
+
+	y.display();
 
 	z.display();
 
+	io::printn("\n--------------------------------------------\n");
+
+	z.backward();
+	z.display();
+
+	// z.grad = 2.0;
+
+	// z.display();
+
 	
-	double n = 2.;
+	// double n = 2.;
 
-	Value zpow = z.pow(n);
-	zpow.label = "zpow";
+	// Value zpow = z.pow(n);
+	// zpow.label = "zpow";
 
-	//zpow.display();
+	// //zpow.display();
 
-	v.display();
+	// v.display();
 
-	w.display();
+	// w.display();
 
-	z.addgrad(&v,&w);
+	// z.addgrad(&v,&w);
 
-	v.display();
+	// v.display();
 
-	w.display();
-
-
+	// w.display();
+	
 	// cast not working
-	// free lists? (replace by arrays?
+	// free lists (replace by arrays?
 	//int b = 2;
 	//any *a = (any *)&b;
 	// builtin::anycast could not be found

@@ -7,7 +7,6 @@ import std::math;
 import std::core::builtin;
 
 
-
 // def DoubleBackward= fn double(double);
 
 // fn void apply(double[] arr, DoubleBackward t)
@@ -50,45 +49,64 @@ fn void main()
 	String name = "name";
 	String age = string::tformat("%d",21);
 	String name_age = name.concat(age);
-	//String age = (String)21;
-	//char[*] hi = "1";
-	//name.appendf();
-	//DString ages = DString("%d",age);
+	String age = (String)21;
+	char[*] hi = "1";
+	name.appendf();
+	DString ages = DString("%d",age);
 	
 	io::printf("%s", name_age);
 	
 	List
 */
+
 //def ValueCallback = fn Value(Value* v);
 //def ValueCallback = fn void (Value* v, Value* z, Value* w);
 
+def ValueList = List(<Value>);
+
+
 struct Value{
+	
 	double data;
 	double grad;
 	String label;
 	String op;
-	List(<Value>) prev;
+	ValueList prev;
 	//ValueCallback backward;
 	//double[] backward; 
 
 }
 
-// fn Value Value.addTen(Value* v){
-// 	return Value{.data=v.data + 1000};
-// }
 
-def Vcall = fn void (Value*v, Value* w); 
-
-
-fn void Value.backward(Value* v, Value* w, Vcall vf)
+interface MyName
 {
-	vf(v,w);
 
+	fn String myname();
 }
 
-fn void Value.gradAdd(Value* z, Value* v, Value* w){
-	v.grad += z.grad;
-	w.grad += z.grad;
+//fn Value Value.addTen(Value* v){
+// 	return Value{.data=v.data + 1000};
+//}
+
+def Vcall = fn void (Value* v, Value* w); 
+
+
+// fn void Value.backward(Value* v, Value* w, Vcall vf)
+// {
+// 	vf(v,w);
+
+//}
+
+
+//syntax highlight com problema na hora de colocar o retorno da função
+fn void Value.gradAdd(Value* z){
+	
+	foreach (&el : z.prev)
+	{
+		
+		el.grad = el.grad + z.grad;
+	}	
+	
 }
 
 fn void Value.gradMul(Value* z, Value* v, Value* w){
@@ -98,16 +116,15 @@ fn void Value.gradMul(Value* z, Value* v, Value* w){
 
 fn void Value.gradPow(Value* z, double d){
 	// self.grad += (other * self.data**(other-1)) * out.grad
-	v.grad += d * math::pow(v.grad, d-1)  * z.grad;
-	w.grad = w.grad + z.grad;
+	z.grad += d * math::pow(z.grad, d - 1)  * z.grad;
 }
 
-// fn void Value.printExpr(Value* v, ValueCallback valuecallback)
+//fn void Value.printExpr(Value* v, ValueCallback valuecallback)
 // {
 // 	Value r = valuecallback(v);
 // 	double d = r.data;
 // 	io::printfn("%d", d);
-// }
+//}
 
 fn Value Value.add(Value* v, Value* w)
 {
@@ -180,7 +197,7 @@ fn Value Value.pow(Value* v, double n){
 	// string format + type coertion
 	out.op = "pow(".concat(string::tformat("%d)",n));
 
-	return z;
+	return out;
 }
 
 fn void Value.print_prev(Value* v){
@@ -218,32 +235,146 @@ fn void Value.neg(Value* v){
 }
 
 
-fn void Value.bakward(Value* v){
-	List(<Value>) topo;
-	List(<Value>) visited;
 
-	v.build_topo();
-	v.grad = 1;
-	foreach (&i : topo)
+fn bool ValueList.contains(&self, Value value){
+    
+    foreach (i, v : self)
 	{
-		//i.backward(); lambda to apply backward
+		if (equals(v, value)) return true;
 	}
+	return false;
+}
+
+fn bool Value.equals(&self, Value value) {
+    
+	if (value.data == self.data && value.label == self.label) return true;
+
+    return false;
+	
+}
+
+
+fn void Value.backward(&self){
+	ValueList topo;
+	ValueList visited;
+	ValueList stack;
+
+
+
+	// topo.temp_init();
+	// visited.temp_init();
+
+
+	//topo.push(*self);
+	stack.push(*self);
+
+	Value v;
+
+	if (try v = stack.last()){
+
+		bool in = visited.contains(v);
+		io::printn(in);
+
+
+		if (!in){
+			visited.push(v);
+			//io::printn(visited[0].label);
+			foreach(&child : v.prev){
+				if(!visited.contains(*child)){
+					stack.push(child);
+					}else{
+						topo.push(stack.pop());
+					}
+				stack.push(child);
+			}
+
+		}else{
+			stack.pop();
+		}
+
+
+		/* foreach(&el : visited)
+		{
+			
+			if (el.label == v.label && el.data == v.data){
+				;	
+			} else {
+				io::printn("diferente");
+			}
+		}*/
+		
+			
+
+	}
+
+
+	/*  while (!stack.is_empty())
+	{
+		Value v = stack.last();
+
+
+	}*/
+	/* foreach (&child : self.prev)
+	{
+		io::printn(child.label);
+	}
+
+	Value ptr = self.prev[0];
+
+	io::printn(ptr.label);
+
+	
+	foreach(&el : visited)
+	{
+		
+		if (el.label == ptr.label && el.data == ptr.data){
+			io::printn("igual");	
+		} else {
+			io::printn("diferente");
+		}
+	}
+
+	foreach(&child : ptr.prev)
+	{
+		io::printn(child.label);
+	}*/
+
+
+	//visited.contains(&ptr);
+
+	//io::printn(visited.contains(self));
+
+	/*if (!visited.is_empty() || ){
+	
+	}*/
+
+	//build_topo(self, &topo,  &visited);
+	
+
+	/*topo.reverse();
+
+	foreach (&child : topo)
+	{
+		//child.gradAdd();
+	}*/
+
+	self.grad = 1;
+
 
 }
 
-fn void Value.build_topo(Value* v){
-	List(<Value>) topo;
-	List(<Value>) visited;
 
-	// if (visited.contains(*v)==false){
-	// 	visited.push(*v);
-	// 	foreach (&i : v.prev) 
-	// 	{
-	// 		build_topo(i);
-	// 	}
-	// 	topo.push(*v);
-	// }
-
+fn void build_topo(Value v, ValueList* topo, ValueList* visited){
+	
+	/* if (visited.contains(v))
+	{
+		//visited.push(*v);
+		foreach (&child : v.prev)
+		{
+			build_topo(child, topo, visited);
+		}
+		//topo.push(*v);
+	}*/
 }
 
 
@@ -261,7 +392,7 @@ fn void Value.build_topo(Value* v){
 
 // fn void Value.backward(Value *v){
 // 	Value[] topo;
-// 	List(<Value>) visited;
+// 	ValueList visited;
 // 	/*topo = {|
 // 		if (visited.contains(*v)==false){
 // 			visited.push(*v);
@@ -272,8 +403,8 @@ fn void Value.build_topo(Value* v){
 // }
 
 // fn void Value.buildtopo(Value *v){
-// 	List(<Value>) topo;
-// 	List(<Value>) visited;
+// 	ValueList topo;
+// 	ValueList visited;
 
 // 	if (!visited.contains(*v)){
 
@@ -281,25 +412,6 @@ fn void Value.build_topo(Value* v){
 
 
 // } 
-/*def backward(self):
-
-        # topological order all of the children in the graph
-        topo = []
-        visited = set()
-        def build_topo(v):
-            if v not in visited:
-                visited.add(v)
-                for child in v._prev:
-                    build_topo(child)
-                topo.append(v)
-        build_topo(self)
-
-        # go one variable at a time and apply the chain rule to get its gradient
-        self.grad = 1
-        for v in reversed(topo):
-            v._backward()
-*/
-
 fn void Value.display(Value *v){
 
 
@@ -317,11 +429,11 @@ fn void Value.display(Value *v){
 		io::printf("\nPrevious nodes: ");
 		foreach (s : v.prev)
 		{
-			io::printf("%s ",s.label);
+			io::printf("%s | Value(data = %f )\t",s.label, s.data);
 			
 		}
 
-		io::printf("\nResult from: %s", v.op);
+		io::printf("\nResults from: %s", v.op);
 		
 	}
 	io::printf("\n-----------------------------------------------\n");
